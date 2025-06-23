@@ -109,3 +109,23 @@ button.new-game {
     margin-inline: auto;
     cursor: pointer;
 }
+
+/* correct guess — green */
+section.keyboard > button.correct {
+  background-color: #10A95B;
+  border-color:   #10A95B;
+  color:          #F9F4DA;
+}
+
+/* wrong guess — red */
+section.keyboard > button.wrong {
+  background-color: #E14444;
+  border-color:   #E14444;
+  color:          #F9F4DA;
+}
+
+/* optional: style disabled keys */
+section.keyboard > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
