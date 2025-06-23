@@ -3,8 +3,10 @@ import React from "react"
 /**
  * Goal: Build out the main parts of our app
  * 
- * Challenge: Add a header with the game title
- * and description. Startin' out easy 🙂🚶‍➡️
+ * Challenge: Build a status section below the header.
+ * For now, you can just hard-code in the styles for
+ * a winning game, and we'll make it more dynamic
+ * later.
  */
 
 export default function AssemblyEndgame() {
@@ -15,6 +17,10 @@ export default function AssemblyEndgame() {
                 <p>Guess the word within 8 attempts to keep the 
                 programming world safe from Assembly!</p>
             </header>
+            <section className="game-status">
+                <h2>You win!</h2>
+                <p>Well done! 🎉</p>
+            </section>
         </main>
     )
 }
