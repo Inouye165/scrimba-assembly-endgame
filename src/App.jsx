@@ -5,9 +5,15 @@ import { languages } from "./languages"
 
 
 export default function AssemblyEndgame() {
+    // State values
     const [currentWord, setCurrentWord] = useState("react")
     const [guessedLetters, setGuessedLetters] = useState([])
-
+    
+    // Derived values
+    const wrongGuessCount = 
+        guessedLetters.filter(letter => !currentWord.includes(letter)).length
+        
+    // Static values
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
     function addGuessedLetter(letter) {
