@@ -3,6 +3,19 @@ import { clsx } from "clsx"
 import { languages } from "./languages"
 import { getFarewellText } from "./utils"
 
+/**
+ * Backlog:
+ * 
+ * ✅ Farewell messages in status section
+ * - Disable the keyboard when the game is over
+ * - Fix a11y issues
+ * - Make the New Game button reset the game
+ * - Choose a random word from a list of words
+ * - Confetti drop when the user wins
+ * 
+ * Challenge: Disable the keyboard when the game is over
+ */
+
 export default function AssemblyEndgame() {
     // State values
     const [currentWord, setCurrentWord] = useState("react")
@@ -22,6 +35,7 @@ export default function AssemblyEndgame() {
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
     function addGuessedLetter(letter) {
+        if (isGameOver) return;
         setGuessedLetters(prevLetters =>
             prevLetters.includes(letter) ?
                 prevLetters :
@@ -66,6 +80,7 @@ export default function AssemblyEndgame() {
             <button
                 className={className}
                 key={letter}
+                disabled={isGameOver}
                 onClick={() => addGuessedLetter(letter)}
             >
                 {letter.toUpperCase()}
