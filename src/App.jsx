@@ -1,8 +1,18 @@
 import { useState } from "react"
-import clsx from "clsx"
+import { clsx } from "clsx"
 import { languages } from "./languages"
 
-
+/**
+ * Goal: Add in the incorrect guesses mechanism to the game
+ * 
+ * Challenge:
+ * 1. Create a variable `isGameOver` which evaluates to `true`
+ *    if the user has guessed incorrectly 8 times. Consider how
+ *    we might make this more dynamic if we were ever to add or
+ *    remove languages from the languages array.
+ * 2. Conditionally render the New Game button only if the game
+ *    is over.
+ */
 
 export default function AssemblyEndgame() {
     // State values
@@ -12,7 +22,11 @@ export default function AssemblyEndgame() {
     // Derived values
     const wrongGuessCount = 
         guessedLetters.filter(letter => !currentWord.includes(letter)).length
-        
+    const isGameWon = 
+        currentWord.split("").every(letter => guessedLetters.includes(letter))
+    const isGameLost = wrongGuessCount >= languages.length - 1
+    const isGameOver = isGameWon || isGameLost
+    
     // Static values
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
@@ -24,14 +38,16 @@ export default function AssemblyEndgame() {
         )
     }
 
-    const languageElements = languages.map(lang => {
+    const languageElements = languages.map((lang, index) => {
+        const isLanguageLost = index < wrongGuessCount
         const styles = {
             backgroundColor: lang.backgroundColor,
             color: lang.color
         }
+        const className = clsx("chip", isLanguageLost && "lost")
         return (
             <span
-                className="chip"
+                className={className}
                 style={styles}
                 key={lang.name}
             >
@@ -86,7 +102,7 @@ export default function AssemblyEndgame() {
             <section className="keyboard">
                 {keyboardElements}
             </section>
-            <button className="new-game">New Game</button>
+            {isGameOver && <button className="new-game">New Game</button>}
         </main>
     )
 }
