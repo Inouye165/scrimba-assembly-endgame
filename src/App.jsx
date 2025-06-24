@@ -4,20 +4,6 @@ import Confetti from "react-confetti"
 import { languages } from "./languages"
 import { getFarewellText, getRandomWord } from "./utils"
 
-/**
- * Backlog:
- * 
- * ✅ Farewell messages in status section
- * ✅ Disable the keyboard when the game is over
- * ✅ Fix a11y issues
- * ✅ Choose a random word from a list of words
- * ✅ Make the New Game button reset the game
- * - Reveal what the word was if the user loses the game
- * ✅ Confetti drop when the user wins
- * 
- * Challenge: Make the New Game button reset the game
- */
-
 export default function AssemblyEndgame() {
     // State values
     const [currentWord, setCurrentWord] = useState(() => getRandomWord())
