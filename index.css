@@ -120,6 +120,9 @@ section.word > span {
     font-size: 1.125rem;
     border-bottom: 1px solid #F9F4DA;
 }
+section.word > span.missed-letter {
+    color: #EC5D49;
+}
 
 section.keyboard {
     display: flex;
@@ -157,4 +160,15 @@ button.new-game {
     display: block;
     margin-inline: auto;
     cursor: pointer;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
