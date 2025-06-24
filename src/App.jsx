@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { clsx } from "clsx"
 import Confetti from "react-confetti"
 import { languages } from "./languages"
@@ -8,20 +8,31 @@ export default function AssemblyEndgame() {
     // State values
     const [currentWord, setCurrentWord] = useState(() => getRandomWord())
     const [guessedLetters, setGuessedLetters] = useState([])
+    // New state for the shake effect
+    const [isShaking, setIsShaking] = useState(false) 
 
     // Derived values
-    const numGuessesLeft = languages.length - 1
     const wrongGuessCount =
         guessedLetters.filter(letter => !currentWord.includes(letter)).length
+    const numGuessesLeft = languages.length - wrongGuessCount
     const isGameWon =
         currentWord.split("").every(letter => guessedLetters.includes(letter))
-    const isGameLost = wrongGuessCount >= numGuessesLeft
+    const isGameLost = wrongGuessCount >= languages.length
     const isGameOver = isGameWon || isGameLost
     const lastGuessedLetter = guessedLetters[guessedLetters.length - 1]
     const isLastGuessIncorrect = lastGuessedLetter && !currentWord.includes(lastGuessedLetter)
 
     // Static values
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+    // Effect to trigger the shake animation on a wrong guess
+    useEffect(() => {
+        if (isLastGuessIncorrect) {
+            setIsShaking(true)
+            const timeoutId = setTimeout(() => setIsShaking(false), 500) // Duration of the shake animation
+            return () => clearTimeout(timeoutId)
+        }
+    }, [guessedLetters, isLastGuessIncorrect])
 
     function addGuessedLetter(letter) {
         setGuessedLetters(prevLetters =>
@@ -57,11 +68,15 @@ export default function AssemblyEndgame() {
     const letterElements = currentWord.split("").map((letter, index) => {
         const shouldRevealLetter = isGameLost || guessedLetters.includes(letter)
         const letterClassName = clsx(
+            "letter-box",
+            shouldRevealLetter && "revealed",
             isGameLost && !guessedLetters.includes(letter) && "missed-letter"
         )
         return (
             <span key={index} className={letterClassName}>
-                {shouldRevealLetter ? letter.toUpperCase() : ""}
+                <span className="letter-inner">
+                    {shouldRevealLetter ? letter.toUpperCase() : ""}
+                </span>
             </span>
         )
     })
@@ -79,8 +94,8 @@ export default function AssemblyEndgame() {
             <button
                 className={className}
                 key={letter}
-                disabled={isGameOver}
-                aria-disabled={guessedLetters.includes(letter)}
+                disabled={isGameOver || isGuessed}
+                aria-disabled={isGuessed}
                 aria-label={`Letter ${letter}`}
                 onClick={() => addGuessedLetter(letter)}
             >
@@ -107,15 +122,15 @@ export default function AssemblyEndgame() {
         if (isGameWon) {
             return (
                 <>
-                    <h2>You win!</h2>
-                    <p>Well done! 🎉</p>
+                    <h2>YOU WIN!</h2>
+                    <p>The programming world is safe. Well done! 🎉</p>
                 </>
             )
         } 
         if (isGameLost) {
             return (
                 <>
-                    <h2>Game over!</h2>
+                    <h2>GAME OVER</h2>
                     <p>You lose! Better start learning Assembly 😭</p>
                 </>
             )
@@ -126,12 +141,11 @@ export default function AssemblyEndgame() {
 
     return (
         <main>
-            {isGameWon && <Confetti />}
+            {isGameWon && <Confetti gravity={0.15} numberOfPieces={300} />}
             
             <header>
                 <h1>Assembly: Endgame</h1>
-                <p>Guess the word within 8 attempts to keep the
-                programming world safe from Assembly!</p>
+                <p>Guess the word. Save the modern web.</p>
             </header>
 
             <section 
@@ -142,34 +156,15 @@ export default function AssemblyEndgame() {
                 {renderGameStatus()}
             </section>
 
-            <section className="language-chips">
+            <section className="language-chips" aria-label="Guesses left">
                 {languageElements}
             </section>
 
-            <section className="word">
+            <section className={clsx("word", isShaking && "shake")} aria-label="Current word">
                 {letterElements}
             </section>
             
-            {/* Combined visually-hidden aria-live region for status updates */}
-            <section 
-                className="sr-only" 
-                aria-live="polite" 
-                role="status"
-            >
-                <p>
-                    {currentWord.includes(lastGuessedLetter) ? 
-                        `Correct! The letter ${lastGuessedLetter} is in the word.` : 
-                        `Sorry, the letter ${lastGuessedLetter} is not in the word.`
-                    }
-                    You have {numGuessesLeft} attempts left.
-                </p>
-                <p>Current word: {currentWord.split("").map(letter => 
-                guessedLetters.includes(letter) ? letter + "." : "blank.")
-                .join(" ")}</p>
-            
-            </section>
-
-            <section className="keyboard">
+            <section className="keyboard" aria-label="Keyboard">
                 {keyboardElements}
             </section>
 
@@ -177,7 +172,7 @@ export default function AssemblyEndgame() {
                 <button 
                     className="new-game" 
                     onClick={startNewGame}
-                >New Game</button>}
+                >Play Again</button>}
         </main>
     )
 }
