@@ -1,32 +1,34 @@
 import { useState } from "react"
 import { clsx } from "clsx"
 import { languages } from "./languages"
-import { getFarewellText } from "./utils"
+import { getFarewellText, getRandomWord } from "./utils"
 
 /**
  * Backlog:
  * 
  * ✅ Farewell messages in status section
- * - Disable the keyboard when the game is over
- * - Fix a11y issues
- * - Make the New Game button reset the game
- * - Choose a random word from a list of words
+ * ✅ Disable the keyboard when the game is over
+ * ✅ Fix a11y issues
+ * ✅ Choose a random word from a list of words
+ * ✅ Make the New Game button reset the game
+ * - Reveal what the word was if the user loses the game
  * - Confetti drop when the user wins
  * 
- * Challenge: Disable the keyboard when the game is over
+ * Challenge: Make the New Game button reset the game
  */
 
 export default function AssemblyEndgame() {
     // State values
-    const [currentWord, setCurrentWord] = useState("react")
+    const [currentWord, setCurrentWord] = useState(() => getRandomWord())
     const [guessedLetters, setGuessedLetters] = useState([])
 
     // Derived values
+    const numGuessesLeft = languages.length - 1
     const wrongGuessCount =
         guessedLetters.filter(letter => !currentWord.includes(letter)).length
     const isGameWon =
         currentWord.split("").every(letter => guessedLetters.includes(letter))
-    const isGameLost = wrongGuessCount >= languages.length - 1
+    const isGameLost = wrongGuessCount >= numGuessesLeft
     const isGameOver = isGameWon || isGameLost
     const lastGuessedLetter = guessedLetters[guessedLetters.length - 1]
     const isLastGuessIncorrect = lastGuessedLetter && !currentWord.includes(lastGuessedLetter)
@@ -35,12 +37,16 @@ export default function AssemblyEndgame() {
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
     function addGuessedLetter(letter) {
-        if (isGameOver) return;
         setGuessedLetters(prevLetters =>
             prevLetters.includes(letter) ?
                 prevLetters :
                 [...prevLetters, letter]
         )
+    }
+    
+    function startNewGame() {
+        setCurrentWord(getRandomWord())
+        setGuessedLetters([])
     }
 
     const languageElements = languages.map((lang, index) => {
@@ -81,6 +87,8 @@ export default function AssemblyEndgame() {
                 className={className}
                 key={letter}
                 disabled={isGameOver}
+                aria-disabled={guessedLetters.includes(letter)}
+                aria-label={`Letter ${letter}`}
                 onClick={() => addGuessedLetter(letter)}
             >
                 {letter.toUpperCase()}
@@ -131,7 +139,11 @@ export default function AssemblyEndgame() {
                 programming world safe from Assembly!</p>
             </header>
 
-            <section className={gameStatusClass}>
+            <section 
+                aria-live="polite" 
+                role="status" 
+                className={gameStatusClass}
+            >
                 {renderGameStatus()}
             </section>
 
@@ -142,12 +154,35 @@ export default function AssemblyEndgame() {
             <section className="word">
                 {letterElements}
             </section>
+            
+            {/* Combined visually-hidden aria-live region for status updates */}
+            <section 
+                className="sr-only" 
+                aria-live="polite" 
+                role="status"
+            >
+                <p>
+                    {currentWord.includes(lastGuessedLetter) ? 
+                        `Correct! The letter ${lastGuessedLetter} is in the word.` : 
+                        `Sorry, the letter ${lastGuessedLetter} is not in the word.`
+                    }
+                    You have {numGuessesLeft} attempts left.
+                </p>
+                <p>Current word: {currentWord.split("").map(letter => 
+                guessedLetters.includes(letter) ? letter + "." : "blank.")
+                .join(" ")}</p>
+            
+            </section>
 
             <section className="keyboard">
                 {keyboardElements}
             </section>
 
-            {isGameOver && <button className="new-game">New Game</button>}
+            {isGameOver && 
+                <button 
+                    className="new-game" 
+                    onClick={startNewGame}
+                >New Game</button>}
         </main>
     )
 }
