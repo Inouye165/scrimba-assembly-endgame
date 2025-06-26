@@ -1,99 +1,75 @@
 import { useState, useEffect } from "react"
 import { clsx } from "clsx"
-import Confetti from "react-confetti"
 import { languages } from "./languages"
 import { getFarewellText, getRandomWord } from "./utils"
 
 export default function AssemblyEndgame() {
-    // State values
     const [currentWord, setCurrentWord] = useState(() => getRandomWord())
-    const [guessedLetters, setGuessedLetters] = useState([])
-    // New state for the shake effect
-    const [isShaking, setIsShaking] = useState(false) 
+    const [guessedLetters, setGuessedLetters] = useState(new Set())
+    const [isShaking, setIsShaking] = useState(false)
 
     // Derived values
-    const wrongGuessCount =
-        guessedLetters.filter(letter => !currentWord.includes(letter)).length
-    const numGuessesLeft = languages.length - wrongGuessCount
-    const isGameWon =
-        currentWord.split("").every(letter => guessedLetters.includes(letter))
+    const wrongGuesses = Array.from(guessedLetters).filter(letter => !currentWord.includes(letter))
+    const wrongGuessCount = wrongGuesses.length
+    const isGameWon = currentWord.split("").every(letter => guessedLetters.has(letter))
     const isGameLost = wrongGuessCount >= languages.length
     const isGameOver = isGameWon || isGameLost
-    const lastGuessedLetter = guessedLetters[guessedLetters.length - 1]
-    const isLastGuessIncorrect = lastGuessedLetter && !currentWord.includes(lastGuessedLetter)
+    const lastWrongGuess = wrongGuesses[wrongGuesses.length - 1]
 
-    // Static values
-    const alphabet = "abcdefghijklmnopqrstuvwxyz"
-
-    // Effect to trigger the shake animation on a wrong guess
     useEffect(() => {
-        if (isLastGuessIncorrect) {
+        if (lastWrongGuess) {
             setIsShaking(true)
-            const timeoutId = setTimeout(() => setIsShaking(false), 500) // Duration of the shake animation
+            const timeoutId = setTimeout(() => setIsShaking(false), 500)
             return () => clearTimeout(timeoutId)
         }
-    }, [guessedLetters, isLastGuessIncorrect])
+    }, [lastWrongGuess])
 
     function addGuessedLetter(letter) {
-        setGuessedLetters(prevLetters =>
-            prevLetters.includes(letter) ?
-                prevLetters :
-                [...prevLetters, letter]
-        )
+        setGuessedLetters(prev => new Set([...prev, letter]))
     }
-    
+
     function startNewGame() {
         setCurrentWord(getRandomWord())
-        setGuessedLetters([])
+        setGuessedLetters(new Set())
     }
 
-    const languageElements = languages.map((lang, index) => {
-        const isLanguageLost = index < wrongGuessCount
-        const styles = {
-            backgroundColor: lang.backgroundColor,
-            color: lang.color
-        }
-        const className = clsx("chip", isLanguageLost && "lost")
-        return (
-            <span
-                className={className}
-                style={styles}
-                key={lang.name}
-            >
-                {lang.name}
-            </span>
-        )
-    })
+    const languageElements = languages.map((lang, index) => (
+        <span
+            key={lang.name}
+            className={clsx("chip", index < wrongGuessCount && "lost")}
+            style={{ backgroundColor: lang.backgroundColor, color: lang.color }}
+        >
+            {lang.name}
+        </span>
+    ))
 
     const letterElements = currentWord.split("").map((letter, index) => {
-        const shouldRevealLetter = isGameLost || guessedLetters.includes(letter)
-        const letterClassName = clsx(
-            "letter-box",
-            shouldRevealLetter && "revealed",
-            isGameLost && !guessedLetters.includes(letter) && "missed-letter"
-        )
+        const isRevealed = isGameLost || guessedLetters.has(letter)
         return (
-            <span key={index} className={letterClassName}>
+            <span 
+                key={index} 
+                className={clsx(
+                    "letter-box",
+                    isRevealed && "revealed",
+                    isGameLost && !guessedLetters.has(letter) && "missed-letter"
+                )}
+            >
                 <span className="letter-inner">
-                    {shouldRevealLetter ? letter.toUpperCase() : ""}
+                    {isRevealed ? letter.toUpperCase() : ""}
                 </span>
             </span>
         )
     })
 
-    const keyboardElements = alphabet.split("").map(letter => {
-        const isGuessed = guessedLetters.includes(letter)
+    const keyboardElements = "abcdefghijklmnopqrstuvwxyz".split("").map(letter => {
+        const isGuessed = guessedLetters.has(letter)
         const isCorrect = isGuessed && currentWord.includes(letter)
         const isWrong = isGuessed && !currentWord.includes(letter)
-        const className = clsx({
-            correct: isCorrect,
-            wrong: isWrong
-        })
 
         return (
             <button
-                className={className}
                 key={letter}
+                className={clsx({ correct: isCorrect, wrong: isWrong })}
                 disabled={isGameOver || isGuessed}
                 aria-disabled={isGuessed}
                 aria-label={`Letter ${letter}`}
@@ -104,14 +80,8 @@ export default function AssemblyEndgame() {
         )
     })
 
-    const gameStatusClass = clsx("game-status", {
-        won: isGameWon,
-        lost: isGameLost,
-        farewell: !isGameOver && isLastGuessIncorrect
-    })
-
     function renderGameStatus() {
-        if (!isGameOver && isLastGuessIncorrect) {
+        if (!isGameOver && lastWrongGuess) {
             return (
                 <p className="farewell-message">
                     {getFarewellText(languages[wrongGuessCount - 1].name)}
@@ -126,7 +96,8 @@ export default function AssemblyEndgame() {
                     <p>The programming world is safe. Well done! 🎉</p>
                 </>
             )
-        } 
+        }
+        
         if (isGameLost) {
             return (
                 <>
@@ -135,23 +106,25 @@ export default function AssemblyEndgame() {
                 </>
             )
         }
-        
+
         return null
     }
 
     return (
         <main>
-            {isGameWon && <Confetti gravity={0.15} numberOfPieces={300} />}
-            
             <header>
                 <h1>Assembly: Endgame</h1>
                 <p>Guess the word. Save the modern web.</p>
             </header>
 
-            <section 
-                aria-live="polite" 
-                role="status" 
-                className={gameStatusClass}
+            <section
+                aria-live="polite"
+                role="status"
+                className={clsx("game-status", {
+                    won: isGameWon,
+                    lost: isGameLost,
+                    farewell: !isGameOver && lastWrongGuess
+                })}
             >
                 {renderGameStatus()}
             </section>
@@ -168,11 +141,11 @@ export default function AssemblyEndgame() {
                 {keyboardElements}
             </section>
 
-            {isGameOver && 
-                <button 
-                    className="new-game" 
-                    onClick={startNewGame}
-                >Play Again</button>}
+            {isGameOver && (
+                <button className="new-game" onClick={startNewGame}>
+                    Play Again
+                </button>
+            )}
         </main>
     )
 }
