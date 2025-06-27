@@ -1,4 +1,4 @@
-export const languages = [
+export const archery = [
     {
         name: "Quiver",
         backgroundColor: "#E2680F",
