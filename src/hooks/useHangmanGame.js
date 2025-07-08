@@ -1,15 +1,14 @@
 // src/hooks/useHangmanGame.js
-import { useState, useEffect, useCallback } from 'react';
-import { getRandomWordForTheme } from '../themes';
 
-/**
- * Custom hook encapsulating the game logic:
- * - Word selection
- * - Tracking guesses
- * - Win/loss detection
- * - Shaking state
- */
+import { useState, useEffect, useCallback, useMemo } from 'react';
+// 1. Import themes to access the lives count
+import { themes, getRandomWordForTheme } from '../themes';
+
 export default function useHangmanGame(themeId) {
+  // 2. Find the full theme object to get its properties
+  const currentTheme = useMemo(() => themes.find(t => t.id === themeId), [themeId]);
+  const livesForTheme = useMemo(() => currentTheme.lives.length, [currentTheme]);
+
   const [currentWord, setCurrentWord] = useState(() => getRandomWordForTheme(themeId));
   const [guessedLetters, setGuessedLetters] = useState(new Set());
   const [isShaking, setIsShaking] = useState(false);
@@ -17,7 +16,10 @@ export default function useHangmanGame(themeId) {
   // Derived state
   const wrongGuesses = Array.from(guessedLetters).filter(l => !currentWord.includes(l));
   const wrongGuessCount = wrongGuesses.length;
-  const isGameLost = useCallback(() => wrongGuessCount >= 6, [wrongGuessCount]);
+  
+  // 3. Use the dynamic 'livesForTheme' instead of hardcoded '6'
+  const isGameLost = useCallback(() => wrongGuessCount >= livesForTheme, [wrongGuessCount, livesForTheme]);
+  
   const isGameWon = useCallback(
     () => currentWord.split('').every(l => guessedLetters.has(l)),
     [currentWord, guessedLetters]
@@ -40,8 +42,8 @@ export default function useHangmanGame(themeId) {
   };
 
   // Reset game (word & guesses)
-  const resetGame = () => {
-    setCurrentWord(getRandomWordForTheme(themeId));
+  const resetGame = (newThemeId = themeId) => {
+    setCurrentWord(getRandomWordForTheme(newThemeId));
     setGuessedLetters(new Set());
     setIsShaking(false);
   };
