@@ -26,15 +26,16 @@ export default function useHangmanGame(themeId) {
   );
   const isGameOver = isGameWon() || isGameLost();
 
-  // Shake effect on wrong guess
-  useEffect(() => {
-    if (wrongGuesses.length > 0 && !isGameOver) {
-      setIsShaking(true);
-      const id = setTimeout(() => setIsShaking(false), 500);
-      return () => clearTimeout(id);
-    }
-  }, [wrongGuesses, isGameOver]);
-
+// Shake effect on wrong guess
+useEffect(() => {
+  // Use wrongGuessCount in the condition for consistency
+  if (wrongGuessCount > 0 && !isGameOver) {
+    setIsShaking(true);
+    const id = setTimeout(() => setIsShaking(false), 500);
+    return () => clearTimeout(id);
+  }
+  // Change the dependency from the 'wrongGuesses' array to the 'wrongGuessCount' number
+}, [wrongGuessCount, isGameOver]);
   // Add a guessed letter
   const addGuess = letter => {
     if (isGameOver) return;
