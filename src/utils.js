@@ -1,3 +1,5 @@
+// src/utils.js
+
 import { words } from "./words"
 
 export function getRandomWord() {
